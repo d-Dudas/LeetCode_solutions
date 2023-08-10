@@ -1,26 +1,47 @@
+// Accepted!
+
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
 #include <algorithm>
 
 using namespace std;
+
+// This time, instead of veryfing if a recipe is possible
+// just take the list of a supplies and remove the items from there
+// also from the ingredients - just think like all we have is not necessary anymore
 
 class Solution {
     public:
         Solution(){}
         ~Solution(){}
 
-    bool isRecipePossible(vector<string>& ingredients, vector<string>& supplies)
+    void removeSupplyFromIngredientList(
+        string& supply,
+        vector<string>& recipeIngredients)
     {
-        for(auto& ingredient : ingredients)
+        auto recipeIngredients_it = find(recipeIngredients.begin(), recipeIngredients.end(), supply);
+        if(recipeIngredients_it != recipeIngredients.end())
         {
-            if(find(supplies.begin(), supplies.end(), ingredient) == supplies.end())
-            {
-                return false;
-            }
+            recipeIngredients.erase(recipeIngredients_it);
         }
-        return true;
+    }
+
+    void checkIfRecipePossible(
+        vector<string>& recipes,
+        vector<vector<string>>& ingredients,
+        vector<string>& supplies,
+        vector<string>& possibleRecipes,
+        int& recipeIngredientsPoz)
+    {
+        if(ingredients[recipeIngredientsPoz].size() == 0)
+        {
+            possibleRecipes.push_back(recipes[recipeIngredientsPoz]);
+            supplies.push_back(recipes[recipeIngredientsPoz]);
+            recipes.erase(recipes.begin() + recipeIngredientsPoz);
+            ingredients.erase(ingredients.begin() + recipeIngredientsPoz);
+            recipeIngredientsPoz--;
+        }
     }
 
     vector<string> findAllRecipes(
@@ -28,39 +49,31 @@ class Solution {
         vector<vector<string>>& ingredients,
         vector<string>& supplies)
     {
-        vector<string> output;
-        bool newIngredientFound = true;
 
-        while(newIngredientFound)
+        vector<string> possibleRecipes;
+
+        for(int supplyPoz = 0; supplyPoz < supplies.size(); supplyPoz++)
         {
-            newIngredientFound = false;
-            for(int recipePoz = 0; recipePoz < recipes.size(); recipePoz++)
+            for(int recipeIngredientsPoz = 0; recipeIngredientsPoz < ingredients.size(); recipeIngredientsPoz++)
             {
-                if(isRecipePossible(ingredients.at(recipePoz), supplies))
-                {
-                    output.push_back(recipes.at(recipePoz));
-                    supplies.push_back(recipes.at(recipePoz));
-                    newIngredientFound = true;
-                    recipes.erase(recipes.begin() + recipePoz);
-                    ingredients.erase(ingredients.begin() + recipePoz--);
-                }
+                removeSupplyFromIngredientList(supplies[supplyPoz], ingredients[recipeIngredientsPoz]);
+                checkIfRecipePossible(recipes, ingredients, supplies, possibleRecipes, recipeIngredientsPoz);
             }
         }
-        
 
-        return output;
+        return possibleRecipes;
     }
 };
 
 int main()
 {
-    vector<string> recipes = {"bread"};
-    vector<vector<string>> ingredients = {{"yeast","flour"}};
-    vector<string> supplies = {"yeast"};
+    vector<string> recipes = {"bread","sandwich","burger"};
+    vector<vector<string>> ingredients = {{"yeast","flour"},{"bread","meat"},{"sandwich","meat","bread"}};
+    vector<string> supplies = {"yeast","flour","meat"};
     Solution solution = Solution();
 
     vector<string> output = solution.findAllRecipes(recipes, ingredients, supplies);
-    vector<string> expected = {};
+    vector<string> expected = {"bread","sandwich","burger"};
 
     if (output == expected)
     {
